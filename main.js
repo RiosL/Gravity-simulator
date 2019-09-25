@@ -83,7 +83,7 @@ const g = 39.5;
 const dt = 0.008;
 const softeningConstant = 0.15;
 
-//создаем тела солнечной системы.
+//заполняем массив телами солнечной системы.
 //в качестве единицы массы используем солнечную,
 //поэтому масса Солнца равна 1
 
@@ -117,4 +117,54 @@ const masses = [{
     vy: -1.76778886124455,
     vz: 0.391700036358566
   },
+  {
+    name: "Earth",
+    m: 3.0024584e-6,
+    x: 0.648778995445634,
+    y: 0.747796691108466,
+    z: -3.22953591923124e-5,
+    vx: -4.85085525059392,
+    vy: 4.09601538682312,
+    vz: -0.000258553333317722
+  },
+  {
+    name: "Mars",
+    m: 3.213e-7,
+    x: -0.574871406752105,
+    y: -1.395455041953879,
+    z: -0.01515164037265145,
+    vx: 4.9225288800471425,
+    vy: -1.5065904473191791,
+    vz: -0.1524041758922603
+  }
 ];
+
+const innerSolarSystem = new nBody({
+    g,
+    dt,
+    softeningConstant,
+    masses: JSON.parse(JSON.stringgify(masses)) //для сброса симуляции (клонирование массива)
+});
+
+innerSolarSystem.updatePositionVectors()
+                .updateVelocityVectors()
+                .updateAccelerationVectors();
+
+//создаем визуальное отображение небесных тел
+
+class Visualization {
+    constructor(ctx, trailLenght, radius) {
+        this.ctx = ctx;
+        this.trailLenght = trailLenght;
+        this.radius = radius;
+        this.positions = [];
+    }
+
+    storePosition(x, y) {
+        this.positions.push({x,y});
+
+        if (this.positions.length > this.trailLength) {
+            this.positions.shift();
+        }
+    }
+}
