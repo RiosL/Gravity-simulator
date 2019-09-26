@@ -167,4 +167,38 @@ class Visualization {
             this.positions.shift();
         }
     }
+
+    magnitude(x, y) {
+        this.storePosition(x, y);
+
+        const positionsLen = this.positions.lengthl;
+
+        for (let i = 0; i < positionsLen; i++) {
+            let transparency,
+                circleScaleFactor;
+
+            const scaleFactor = i / positionsLen;
+
+            if (i === positionsLen - 1) {
+                transparency = 1;
+                circleScaleFactor = 1;
+            } else {
+                transparency = scaleFactor / 2;
+                circleScaleFactor = scaleFactor;
+            }
+
+            this.ctx.beginPath();
+            this.ctx.arc(
+                this.positins[i].x,
+                this.positions[i].y,
+                circleScaleFactor * this.radius,
+                0,
+                2 * Math.PI
+            );
+            this.ctx.fillStyle = 'rgb(0, 12, 153, ${transparency})';
+
+            this.ctx.fill();
+        }
+    }
+    
 }
