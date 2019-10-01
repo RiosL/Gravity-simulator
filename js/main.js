@@ -3,17 +3,18 @@
 //Создаем класс n-тел
 
 class nBody {
+
     constructor(params) {
-            this.g = params.g;
-            this.dt = params.dt;
-            this.softeningConstant = params.softeningConstant;
-            this.masses = params.masses;
+        this.g = params.g;
+        this.dt = params.dt;
+        this.softeningConstant = params.softeningConstant;
+        this.masses = params.masses;
     }
 
     //вычисляем изменения позиции и скорость тел в пространстве
 
     updatePositionVectors() {
-        const massesLen = this.masses.lenght;
+        const massesLen = this.masses.length;
 
         for (let i = 0; i < massesLen; i++) {
             const massI = this.masses[i];
@@ -27,10 +28,10 @@ class nBody {
     }
 
     updateVelocityVectors() {
-        const massesLen = this.masses.lenght;
+        const massesLen = this.masses.length;
 
         for (let i = 0; i < massesLen; i++) {
-            const massI = masses[i];
+            const massI = this.masses[i];
 
             massI.vx += massI.ax * this.dt;
             massI.vy += massI.ay * this.dt;
@@ -51,31 +52,31 @@ class nBody {
 
             const massI = this.masses[i];
 
-        for (let j = 0; j < massesLen; j++) {
-            if (i !== j) {
-                const massJ = this.masses[j];
+            for (let j = 0; j < massesLen; j++) {
+                if (i !== j) {
+                    const massJ = this.masses[j];
 
-                const dx = massJ.x - massI.x;
-                const dy = massJ.y - massI.y;
-                const dz = massJ.z - massI.z;
+                    const dx = massJ.x - massI.x;
+                    const dy = massJ.y - massI.y;
+                    const dz = massJ.z - massI.z;
 
-                const distSq = dx * dx + dy * dy + dz * dz;
+                    const distSq = dx * dx + dy * dy + dz * dz;
 
-                const f = (this.g * massJ.m) / (distSq * Math.aqrt(distSq + this.softeningConstant));
+                    const f = (this.g * massJ.m) / (distSq * Math.sqrt(distSq + this.softeningConstant));
 
-                ax += dx * f;
-                ay += dy * f;
-                az += dz * f;
+                    ax += dx * f;
+                    ay += dy * f;
+                    az += dz * f;
+                }
             }
-        }
 
-        massI.ax = ax;
-        massI.ay = ay;
-        massI.az = az;
+            massI.ax = ax;
+            massI.ay = ay;
+            massI.az = az;
+            }
+            return this;
         }
-        return this;
     }
-}
 
 //задаем константы вычислений; измерени времени в годах
 
@@ -88,7 +89,7 @@ const softeningConstant = 0.15;
 //поэтому масса Солнца равна 1
 
 const masses = [{
-    name: 'Sun',
+    name: "Sun",
     m: 1,
     x: -1.50324727873647e-6,
     y: -3.93762725944737e-6,
@@ -143,39 +144,37 @@ const innerSolarSystem = new nBody({
     g,
     dt,
     softeningConstant,
-    masses: JSON.parse(JSON.stringgify(masses)) //для сброса симуляции (клонирование массива)
+    masses: JSON.parse(JSON.stringify(masses)) //для сброса симуляции (клонирование массива)
 });
-
-innerSolarSystem.updatePositionVectors()
-                .updateVelocityVectors()
-                .updateAccelerationVectors();
 
 //создаем визуальное отображение небесных тел
 
 class Visualization {
-    constructor(ctx, trailLenght, radius) {
+
+    constructor(ctx, trailLength, radius) {
         this.ctx = ctx;
-        this.trailLenght = trailLenght;
+        this.trailLength = trailLength;
         this.radius = radius;
         this.positions = [];
     }
 
     storePosition(x, y) {
-        this.positions.push({x,y});
-
-        if (this.positions.length > this.trailLength) {
-            this.positions.shift();
+      this.positions.push({x, y});
+  
+      if (this.positions.length > this.trailLength){
+          this.positions.shift();
         }
+        
     }
-
+    
     magnitude(x, y) {
         this.storePosition(x, y);
 
-        const positionsLen = this.positions.lengthl;
+        const positionsLen = this.positions.length;
 
         for (let i = 0; i < positionsLen; i++) {
-            let transparency,
-                circleScaleFactor;
+            let transparency;
+            let circleScaleFactor;
 
             const scaleFactor = i / positionsLen;
 
@@ -189,16 +188,70 @@ class Visualization {
 
             this.ctx.beginPath();
             this.ctx.arc(
-                this.positins[i].x,
+                this.positions[i].x,
                 this.positions[i].y,
                 circleScaleFactor * this.radius,
                 0,
                 2 * Math.PI
             );
-            this.ctx.fillStyle = 'rgb(0, 12, 153, ${transparency})';
+            this.ctx.fillStyle = `rgb(0, 12, 153, ${transparency})`;
 
             this.ctx.fill();
         }
     }
     
 }
+
+const canvas = document.querySelector("#canvas");
+const ctx = canvas.getContext("2d");
+
+const width = (canvas.width = window.innerWidth);
+const height = (canvas.height = window.innerHeight);
+
+const scale = 70,
+      radius = 4,
+      trailLength = 35;
+
+const populateVisualization = masses => {
+    masses.forEach(
+        mass => (mass["visualization"] = new Visualization (ctx, trailLength, radius)) 
+    );
+};
+
+populateVisualization (innerSolarSystem.masses);
+
+document.querySelector('#reset-button').addEventListener('click', () => {
+    innerSolarSystem.masses = JSON.parse(JSON.stringify(masses));
+    populateVisualization(innerSolarSystem.masses);
+}, false);
+
+const animate = () => {
+    
+    innerSolarSystem
+        .updatePositionVectors()
+        .updateAccelerationVectors()
+        .updateVelocityVectors();
+
+    ctx.clearRect(0, 0, width, height);
+
+    const massesLen = innerSolarSystem.masses.length;
+
+    for (let i =0; i < massesLen; i++) {
+        const massI = innerSolarSystem.masses[i];
+
+        const x = width / 2 + massI.x * scale;
+        const y = height / 2 + massI.y * scale;
+
+        massI.visualization.magnitude(x, y);
+
+        if (massI.name) {
+            ctx.font = "14px Arial";
+            ctx.fillText(massI.name, x + 12, y + 4);
+            ctx.fill();
+        }
+    }
+
+    requestAnimationFrame(animate);
+};
+
+animate();
